@@ -23,4 +23,15 @@ public class PortfolioPosition {
     public String getInstrument_id() { return instrument_id; }
     public int getQuantity() { return quantity; }
     public double getAverage_cost() { return average_cost; }
+
+    public static PortfolioPosition getDummy(String platform_user_id) {
+        return new PortfolioPosition(
+                "platform-abc-123",
+                platform_user_id,
+                "STOCK",
+                "ARKA",
+                50,
+                12.34
+        );
+    }
 }

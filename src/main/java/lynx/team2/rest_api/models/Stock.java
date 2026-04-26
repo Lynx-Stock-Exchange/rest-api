@@ -10,18 +10,17 @@ public class Stock {
     private String ticker;          // Unique symbol, e.g. "ARKA". Max 5 characters, uppercase
     private String name;            // Full company name, e.g. "Arkadia Technologies"
     private String sector;          // Sector grouping, e.g. "Tech", "Finance", "Energy"
-    private double current_price;    // Current market price (decimal, 2dp)
-    private double open_price;       // Price at market open for the current simulated day
-    private double high_price;       // Highest price in the current simulated day
-    private double low_price;        // Lowest price in the current simulated day
-    private int volume;             // Total shares traded in current simulated day
-    private double volatility;       // Simulation parameter: price swing magnitude per tick (e.g. 0.03 = 3%)
-    private double trend_bias;       // Simulation parameter: drift per tick (positive = upward, negative = downward)
-    private double event_weight;     // Simulation parameter: multiplier for market event impact on this stock
-    private double momentum;        // Simulation parameter: how strongly order pressure influences price (0.0–1.0)
+    private Double current_price;   // Current market price (decimal, 2dp)
+    private Double open_price;      // Price at market open for the current simulated day
+    private Double high_price;      // Highest price in the current simulated day
+    private Double low_price;       // Lowest price in the current simulated day
+    private Integer volume;         // Total shares traded in current simulated day
+    private Double volatility;      // Simulation parameter: price swing magnitude per tick (e.g. 0.03 = 3%)
+    private Double trend_bias;      // Simulation parameter: drift per tick (positive = upward, negative = downward)
+    private Double event_weight;    // Simulation parameter: multiplier for market event impact on this stock
+    private Double momentum;        // Simulation parameter: how strongly order pressure influences price (0.0–1.0)
 
     private long listed_at;         // Simulated market timestamp when the stock was listed
-    // Timestamp saved as UNIX Timestamp, then converted to String if needed
 
 
     public Stock(String ticker, String name, String sector, double current_price, double open_price, double high_price, double low_price, int volume, double volatility, double trend_bias, double event_weight, double momentum, long listed_at) {
@@ -53,4 +52,22 @@ public class Stock {
     public double getEvent_weight() { return event_weight; }
     public double getMomentum() { return momentum; }
     public String getListed_at() { return LUtils.longToIsoDate(listed_at); }
+
+    public static Stock getDummy(String ticker) {
+        return new Stock(
+                ticker,
+                "Arkadia Technologies",
+                "Tech",
+                12.34,
+                23.45,
+                34.56,
+                45.67,
+                123,
+                0.03,
+                1,
+                0.25,
+                0.12,
+                1776941245L
+        );
+    }
 }

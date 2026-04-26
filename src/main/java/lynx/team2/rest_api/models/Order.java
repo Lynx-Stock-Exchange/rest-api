@@ -10,17 +10,33 @@ public class Order {
     private String instrument_id;       // Ticker (for stocks) or option_id (for options)
     private String order_type;          // "MARKET" or "LIMIT"
     private String side;                // "BUY" or "SELL"
-    private int quantity;               // Number of shares or contracts
-    private double limit_price;          // Required for LIMIT orders. Null for MARKET orders
+    private Integer quantity;               // Number of shares or contracts
+    private Double limit_price;          // Required for LIMIT orders. Null for MARKET orders
     private String status;              // See Order Lifecycle (Section 3.5)
-    private int filled_quantity;        // How many units have been filled so far
-    private double average_fill_price;   // Weighted average price of executed fills
-    private double exchange_fee;         // Total exchange fee charged on this order (populated on fill)
-    private long created_at;            // Simulated market timestamp of order creation
-    private long updated_at;            // Simulated market timestamp of last status change
-    private long expires_at;            // For LIMIT orders: simulated market time after which order is cancelled
+    private Integer filled_quantity;        // How many units have been filled so far
+    private Double average_fill_price;   // Weighted average price of executed fills
+    private Double exchange_fee;         // Total exchange fee charged on this order (populated on fill)
+    private Long created_at;            // Simulated market timestamp of order creation
+    private Long updated_at;            // Simulated market timestamp of last status change
+    private Long expires_at;            // For LIMIT orders: simulated market time after which order is cancelled
 
-    public Order(String order_id, String platform_id, String platform_user_id, String instrument_type, String instrument_id, String order_type, String side, int quantity, double limit_price, String status, int filled_quantity, double average_fill_price, double exchange_fee, long created_at, long updated_at, long expires_at) {
+    public Order(String order_id,
+                 String platform_id,
+                 String platform_user_id,
+                 String instrument_type,
+                 String instrument_id,
+                 String order_type,
+                 String side,
+                 Integer quantity,
+                 Double limit_price,
+                 String status,
+                 Integer filled_quantity,
+                 Double average_fill_price,
+                 Double exchange_fee,
+                 Long created_at,
+                 Long updated_at,
+                 Long expires_at
+    ) {
         this.order_id = order_id;
         this.platform_id = platform_id;
         this.platform_user_id = platform_user_id;
@@ -46,13 +62,34 @@ public class Order {
     public String getInstrument_id() { return instrument_id; }
     public String getOrder_type() { return order_type; }
     public String getSide() { return side; }
-    public int getQuantity() { return quantity; }
-    public double getLimit_price() { return limit_price; }
+    public Integer getQuantity() { return quantity; }
+    public Double getLimit_price() { return limit_price; }
     public String getStatus() { return status; }
-    public int getFilled_quantity() { return filled_quantity; }
-    public double getAverage_fill_price() { return average_fill_price; }
-    public double getExchange_fee() { return exchange_fee; }
+    public Integer  getFilled_quantity() { return filled_quantity; }
+    public Double getAverage_fill_price() { return average_fill_price; }
+    public Double getExchange_fee() { return exchange_fee; }
     public String getCreated_at() { return LUtils.longToIsoDate(created_at); }
     public String getUpdated_at() { return LUtils.longToIsoDate(updated_at); }
     public String getExpires_at() { return LUtils.longToIsoDate(expires_at); }
+
+    public static Order getDummy(String order_id) {
+        return new Order(
+                order_id,
+                "platform-abc-123",
+                "user-abc-123",
+                "STOCK",
+                "ARKA",
+                "LIMIT",
+                "BUY",
+                50,
+                128.0,
+                "FILLED",
+                50,
+                12.34,
+                1.23,
+                1710511200L,
+                1710511200L,
+                1710511200L
+        );
+    }
 }
