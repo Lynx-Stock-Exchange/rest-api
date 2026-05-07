@@ -1,6 +1,9 @@
 FROM gradle:8.14-jdk21 AS build
 WORKDIR /app
-COPY . .
+COPY build.gradle.kts settings.gradle.kts ./
+COPY gradle ./gradle
+RUN gradle dependencies --no-daemon
+COPY src ./src
 RUN gradle bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
