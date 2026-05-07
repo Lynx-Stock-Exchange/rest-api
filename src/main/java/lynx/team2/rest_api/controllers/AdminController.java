@@ -87,7 +87,7 @@ public class AdminController {
     @PostMapping("/market/open")
     public ResponseEntity<Void> postOpen() {
         System.out.println("MARKET OPEN");
-        publish("MARKET_OPEN", Map.of());
+        publish("OPEN_MARKET", Map.of());
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
@@ -99,7 +99,7 @@ public class AdminController {
     @PostMapping("/market/close")
     public ResponseEntity<Void> postClose() {
         System.out.println("MARKET CLOSE");
-        publish("MARKET_CLOSE", Map.of());
+        publish("CLOSE_MARKET", Map.of());
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
