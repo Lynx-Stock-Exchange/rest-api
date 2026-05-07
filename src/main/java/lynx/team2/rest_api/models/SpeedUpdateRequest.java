@@ -6,4 +6,8 @@ public class SpeedUpdateRequest {
     public Integer getMultiplier(){
         return multiplier;
     }
+
+    public void setMultiplier(Integer multiplier) {
+        this.multiplier = multiplier;
+    }
 }

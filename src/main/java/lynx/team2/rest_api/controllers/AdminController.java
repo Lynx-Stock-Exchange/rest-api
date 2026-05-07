@@ -6,17 +6,45 @@ import lynx.team2.rest_api.models.StockSeedRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/admin")
 @CrossOrigin("*") // remove this when deployed
 public class AdminController {
+
+    @Value("${kafka.topics.admin-commands}")
+    private String adminCommandsTopic;
+
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    public AdminController(KafkaTemplate<String, Object> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
+
+    private void publish(String action, Map<String, Object> payload) {
+        kafkaTemplate.send(adminCommandsTopic, new AdminCommand(action, payload));
+    }
+
+    private static class AdminCommand {
+        private final String action;
+        private final Map<String, Object> payload;
+
+        AdminCommand(String action, Map<String, Object> payload) {
+            this.action = action;
+            this.payload = payload;
+        }
+
+        public String getAction() { return action; }
+        public Map<String, Object> getPayload() { return payload; }
+    }
 
     /**
      * GET /admin/platforms <br>
@@ -58,7 +86,8 @@ public class AdminController {
      */
     @PostMapping("/market/open")
     public ResponseEntity<Void> postOpen() {
-        System.out.println("Market opened");
+        System.out.println("MARKET OPEN");
+        publish("MARKET_OPEN", Map.of());
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
@@ -69,7 +98,8 @@ public class AdminController {
      */
     @PostMapping("/market/close")
     public ResponseEntity<Void> postClose() {
-        System.out.println("Market closed");
+        System.out.println("MARKET CLOSE");
+        publish("MARKET_CLOSE", Map.of());
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
@@ -80,7 +110,8 @@ public class AdminController {
      */
     @PutMapping("/market/speed")
     public ResponseEntity<Void> putSpeed(@RequestBody SpeedUpdateRequest request){
-        System.out.println("Market speed updated to " + request.getMultiplier());
+        System.out.println("MARKET SPEED UPDATE TO " + request.getMultiplier());
+        publish("MARKET_SPEED_UPDATE", Map.of("multiplier", request.getMultiplier()));
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
