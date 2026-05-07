@@ -1,19 +1,18 @@
 package lynx.team2.rest_api.controllers;
 
-import lynx.team2.rest_api.models.Order;
+import lynx.team2.rest_api.models.OptionContract;
 import lynx.team2.rest_api.models.SpeedUpdateRequest;
+import lynx.team2.rest_api.models.Stock;
 import lynx.team2.rest_api.models.StockSeedRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -46,17 +45,10 @@ public class AdminController {
         public Map<String, Object> getPayload() { return payload; }
     }
 
-    /**
-     * GET /admin/platforms <br>
-     * TODO: Replace with actual data
-     * @return A list of all registered platforms
-     */
-    @GetMapping("/platforms")
-    public List<String> getPlatforms() {
-        //List<String> platforms = new ArrayList<>();
-        //platforms.add("ARKA");
-        return null;
-    }
+
+    // -------------------------------------------------------------------------
+    // PLATFORMS
+    // -------------------------------------------------------------------------
 
     /**
      * POST /admin/platforms <br>
@@ -77,6 +69,28 @@ public class AdminController {
     @DeleteMapping("/platforms")
     public void deletePlatform() {
 
+    }
+
+
+
+    // -------------------------------------------------------------------------
+    // MARKET
+    // -------------------------------------------------------------------------
+
+    /**
+     * GET /admin/market/status <br>
+     * Get current market state: open/closed, simulated time, speed, active event <br>
+     * TODO: Fetch live market state from the simulation engine service
+     */
+    @GetMapping("/market/status")
+    public ResponseEntity<Map<String, Object>> getMarketStatus() {
+        return ResponseEntity.ok(Map.of(
+                "is_open", true,
+                "market_time", "2024-03-15T09:45:00",
+                "real_time", "2024-03-15T10:02:33Z",
+                "speed_multiplier", 60,
+                "active_event", "null"
+        ));
     }
 
     /**
@@ -115,55 +129,139 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
+
+    // -------------------------------------------------------------------------
+    // STOCKS
+    // -------------------------------------------------------------------------
+
+    /**
+     * GET /admin/stocks <br>
+     * List all listed stocks <br>
+     * TODO: Fetch all stocks from the stock registry service
+     */
+    @GetMapping("/stocks")
+    public ResponseEntity<List<Stock>> getAllStocks() {
+        return ResponseEntity.ok(List.of(Stock.getDummy("ARKA"), Stock.getDummy("LYNX")));
+    }
+
+    /**
+     * GET /admin/stocks/{ticker} <br>
+     * Get a single stock by ticker <br>
+     * TODO: Fetch stock by ticker from the stock registry service; return 404 if not found
+     */
+    @GetMapping("/stocks/{ticker}")
+    public ResponseEntity<Stock> getStock(@PathVariable String ticker) {
+        return ResponseEntity.ok(Stock.getDummy(ticker));
+    }
+
     /**
      * POST /admin/stocks <br>
      * Add a new stock. Takes full stock seed object <br>
-     * TODO: Replace with actual function
+     * TODO: Validate ticker uniqueness, persist to stock registry, publish STOCK_ADDED to Kafka
      */
     @PostMapping("/stocks")
-    public void postSingleStock(
-            @RequestBody StockSeedRequest newStockData
-    ) {
-
+    public ResponseEntity<Stock> postSingleStock(@RequestBody StockSeedRequest newStockData) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(Stock.getDummy("ARKA"));
     }
 
     /**
      * POST /admin/stocks/seed <br>
      * Bulk seed stocks from JSON. See Section 9 <br>
-     * TODO: Replace with actual function
+     * TODO: Validate each entry, deduplicate tickers, persist all, publish STOCKS_SEEDED to Kafka
      */
     @PostMapping("/stocks/seed")
-    public void postStocks() {
+    public ResponseEntity<List<Stock>> seedStocks(@RequestBody List<StockSeedRequest> stocks) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(List.of(Stock.getDummy("ARKA"), Stock.getDummy("LYNX")));
+    }
 
+
+    // -------------------------------------------------------------------------
+    // OPTIONS
+    // -------------------------------------------------------------------------
+
+    /**
+     * GET /admin/options <br>
+     * List all option contracts <br>
+     * TODO: Fetch all option contracts from the options registry service
+     */
+    @GetMapping("/options")
+    public ResponseEntity<List<OptionContract>> getAllOptions() {
+        return ResponseEntity.ok(List.of(OptionContract.getDummy("OPT-001"), OptionContract.getDummy("OPT-002")));
+    }
+
+    /**
+     * GET /admin/options/{optionId} <br>
+     * Get a single option contract by ID <br>
+     * TODO: Fetch option by ID from the options registry service; return 404 if not found
+     */
+    @GetMapping("/options/{optionId}")
+    public ResponseEntity<OptionContract> getOption(@PathVariable String optionId) {
+        return ResponseEntity.ok(OptionContract.getDummy(optionId));
     }
 
     /**
      * POST /admin/options <br>
      * Add a new option contract <br>
-     * TODO: Replace with actual function
+     * TODO: Validate underlying ticker exists, generate option_id, persist, publish OPTION_ADDED to Kafka
      */
     @PostMapping("/options")
-    public void postOption() {
-
+    public ResponseEntity<OptionContract> postOption(@RequestBody Map<String, Object> optionData) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(OptionContract.getDummy("OPT-001"));
     }
+
+
+    // -------------------------------------------------------------------------
+    // EVENTS
+    // -------------------------------------------------------------------------
 
     /**
      * POST /admin/events/trigger <br>
      * Manually trigger a market event. Body: event object <br>
-     * TODO: Replace with actual function
+     * TODO: Validate event type and payload, publish MARKET_EVENT to Kafka
      */
     @PostMapping("/events/trigger")
-    public void postEvent() {
+    public ResponseEntity<Void> postEvent(@RequestBody Map<String, Object> event) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+    }
 
+
+    // -------------------------------------------------------------------------
+    // FEES
+    // -------------------------------------------------------------------------
+
+    /**
+     * GET /admin/fees <br>
+     * Get the current exchange fee configuration <br>
+     * TODO: Fetch current fee config from the fee service or config store
+     */
+    @GetMapping("/fees")
+    public ResponseEntity<Map<String, Object>> getFees() {
+        return ResponseEntity.ok(Map.of(
+                "fee_rate", 0.001
+        ));
     }
 
     /**
-     * Put /admin/fees <br>
-     * Update exchange fee rate. Body: { rate: 0.001 } <br>
-     * TODO: Replace with actual function
+     * PUT /admin/fees <br>
+     * Update exchange fee rates. Body: { trade_fee_rate, option_fee_rate, min_fee } <br>
+     * TODO: Validate rates are non-negative, persist to config store, publish FEE_UPDATED to Kafka
      */
     @PutMapping("/fees")
-    public void putFees() {
+    public ResponseEntity<Map<String, Object>> putFees(@RequestBody Map<String, Object> feeUpdate) {
+        return ResponseEntity.ok(Map.of(
+                "fee_rate", 0.001
+        ));
+    }
 
+    /**
+     * GET /admin/revenue <br>
+     * Get total exchange revenue collected from fees <br>
+     * TODO: Aggregate fee revenue from the trade ledger service; optionally filter by date range via query params
+     */
+    @GetMapping("/revenue")
+    public ResponseEntity<Map<String, Object>> getRevenue() {
+        return ResponseEntity.ok(Map.of(
+                "total_revenue", 12345.67
+        ));
     }
 }
