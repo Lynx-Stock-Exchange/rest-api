@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +20,8 @@ public class AdminController {
 
     @Value("${kafka.topics.admin-commands}")
     private String adminCommandsTopic;
+
+    private boolean marketOpen = false;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -84,13 +85,13 @@ public class AdminController {
      */
     @GetMapping("/market/status")
     public ResponseEntity<Map<String, Object>> getMarketStatus() {
-        return ResponseEntity.ok(Map.of(
-                "is_open", true,
-                "market_time", "2024-03-15T09:45:00",
-                "real_time", "2024-03-15T10:02:33Z",
-                "speed_multiplier", 60,
-                "active_event", "null"
-        ));
+        Map<String, Object> status = new java.util.HashMap<>();
+        status.put("is_open", marketOpen);
+        status.put("market_time", "2024-03-15T09:45:00");
+        status.put("real_time", "2024-03-15T10:02:33Z");
+        status.put("speed_multiplier", 60);
+        status.put("active_event", null);
+        return ResponseEntity.ok(status);
     }
 
     /**
@@ -100,6 +101,7 @@ public class AdminController {
      */
     @PostMapping("/market/open")
     public ResponseEntity<Void> postOpen() {
+        marketOpen = true;
         System.out.println("MARKET OPEN");
         publish("OPEN_MARKET", Map.of());
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
@@ -112,6 +114,7 @@ public class AdminController {
      */
     @PostMapping("/market/close")
     public ResponseEntity<Void> postClose() {
+        marketOpen = false;
         System.out.println("MARKET CLOSE");
         publish("CLOSE_MARKET", Map.of());
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
