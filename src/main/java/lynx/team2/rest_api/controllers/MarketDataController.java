@@ -1,13 +1,13 @@
 package lynx.team2.rest_api.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lynx.team2.rest_api.internal.Platform;
+import lynx.team2.rest_api.LUtils;
+import lynx.team2.rest_api.entities.*;
+import lynx.team2.rest_api.exceptions.ErrorCode;
+import lynx.team2.rest_api.exceptions.ExchangeException;
 import lynx.team2.rest_api.models.*;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lynx.team2.rest_api.repositories.*;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,110 +16,180 @@ import java.util.List;
 @RequestMapping("/api/v1/market")
 public class MarketDataController {
 
-    /**
-     * GET /market/status <br>
-     * TODO: Replace with actual data
-     * @return The current state of the market as {@link MarketStatus}
-     */
+    private final StockRepository stockRepository;
+    private final OHLCPointRepository ohlcRepository;
+    private final OptionContractRepository optionRepository;
+    private final MarketEventRepository eventRepository;
+    private final MarketStateRepository marketStateRepository;
+    private final OrderRepository orderRepository;
+
+    public MarketDataController(StockRepository stockRepository,
+                                OHLCPointRepository ohlcRepository,
+                                OptionContractRepository optionRepository,
+                                MarketEventRepository eventRepository,
+                                MarketStateRepository marketStateRepository,
+                                OrderRepository orderRepository) {
+        this.stockRepository = stockRepository;
+        this.ohlcRepository = ohlcRepository;
+        this.optionRepository = optionRepository;
+        this.eventRepository = eventRepository;
+        this.marketStateRepository = marketStateRepository;
+        this.orderRepository = orderRepository;
+    }
+
     @GetMapping("/status")
     public MarketStatus getMarketStatus(HttpServletRequest request) {
-        Platform platform = (Platform) request.getAttribute("platform");
-
-        System.out.println("Request from: " + platform.getName());
-        return MarketStatus.getDummy();
+        return marketStateRepository.findById(1)
+                .map(s -> new MarketStatus(
+                        s.getIsOpen(),
+                        s.getMarketTime() != null ? s.getMarketTime() : 0L,
+                        s.getRealTime() != null ? s.getRealTime() : 0L,
+                        s.getSpeedMultiplier() != null ? s.getSpeedMultiplier() : 1,
+                        s.getActiveEventId()
+                ))
+                .orElse(new MarketStatus(false, 0L, 0L, 1, null));
     }
 
-    /**
-     * GET /market/stocks <br>
-     * TODO: Replace with actual data
-     * @return A list of {@link Stock}, all listed stocks with current prices and simulation metadata
-     */
     @GetMapping("/stocks")
     public List<Stock> getStocks() {
-        List<Stock> stocks = new ArrayList<>();
-        stocks.add(Stock.getDummy("ARKA"));
-        return stocks;
+        List<Stock> result = new ArrayList<>();
+        for (StockEntity e : stockRepository.findAll()) {
+            result.add(toStock(e));
+        }
+        return result;
     }
 
-    /**
-     * GET /market/stocks:ticker <br>
-     * TODO: Replace with actual data
-     * @return The full details for a single stock as {@link Stock}, including OHLC data for the current simulated day.
-     */
     @GetMapping("/stocks/{ticker}")
     public Stock getStockByTicker(@PathVariable("ticker") String ticker) {
-        return Stock.getDummy(ticker);
+        return stockRepository.findById(ticker)
+                .map(this::toStock)
+                .orElseThrow(() -> new ExchangeException(ErrorCode.INVALID_TICKER, "Ticker not found: " + ticker));
     }
 
-    /**
-     * GET /market/stocks:ticker/history <br>
-     * TODO: Replace with actual data <br>
-     * Query params:<br>
-     *     interval - tick | minute | hour (simulated time resolution) <br>
-     *     from - ISO 8601 simulated start time <br>
-     *     to - ISO 8601 simulated end time
-     * @return Historical OHLC price data for charting
-     */
     @GetMapping("/stocks/{ticker}/history")
-    public List<OHLCPoint> getStockHistoryByTicker(@PathVariable("ticker") String ticker) {
-        List<OHLCPoint> points = new ArrayList<>();
-        points.add(OHLCPoint.getDummy(0));
-        points.add(OHLCPoint.getDummy(1));
-        points.add(OHLCPoint.getDummy(2));
-        return points;
+    public List<OHLCPoint> getStockHistoryByTicker(
+            @PathVariable("ticker") String ticker,
+            @RequestParam(value = "interval", required = false) String interval,
+            @RequestParam(value = "from", required = false) String from,
+            @RequestParam(value = "to", required = false) String to) {
+
+        if (stockRepository.findById(ticker).isEmpty()) {
+            throw new ExchangeException(ErrorCode.INVALID_TICKER, "Ticker not found: " + ticker);
+        }
+
+        Long fromEpoch = from != null ? LUtils.isoToEpochSecond(from) : null;
+        Long toEpoch = to != null ? LUtils.isoToEpochSecond(to) : null;
+
+        List<OHLCPoint> result = new ArrayList<>();
+        for (OHLCPointEntity e : ohlcRepository.findByTickerAndFilters(ticker, interval, fromEpoch, toEpoch)) {
+            result.add(new OHLCPoint(
+                    e.getClosePrice() != null ? e.getClosePrice() : 0.0,
+                    e.getOpenPrice() != null ? e.getOpenPrice() : 0.0,
+                    e.getHighPrice() != null ? e.getHighPrice() : 0.0,
+                    e.getLowPrice() != null ? e.getLowPrice() : 0.0,
+                    e.getVolume() != null ? e.getVolume() : 0,
+                    e.getTimestamp()
+            ));
+        }
+        return result;
     }
 
-    /**
-     * GET /market/stocks:ticker/orderbook <br>
-     * TODO: Replace with actual data
-     * @return The current order book depth (top N bid and ask levels) for a stock
-     */
     @GetMapping("/stocks/{ticker}/orderbook")
     public OrderBook getStockOrderbookByTicker(@PathVariable("ticker") String ticker) {
-        List<OrderBookPoint> asks = new ArrayList<>();
-        asks.add(OrderBookPoint.getDummy(0));
-        asks.add(OrderBookPoint.getDummy(1));
-        asks.add(OrderBookPoint.getDummy(2));
+        if (stockRepository.findById(ticker).isEmpty()) {
+            throw new ExchangeException(ErrorCode.INVALID_TICKER, "Ticker not found: " + ticker);
+        }
+
+        List<OrderEntity> activeOrders = orderRepository.findActiveOrdersForOrderBook(ticker);
+
+        // Aggregate bids and asks by price level
+        java.util.Map<Double, Integer> bidMap = new java.util.TreeMap<>(java.util.Collections.reverseOrder());
+        java.util.Map<Double, Integer> askMap = new java.util.TreeMap<>();
+
+        for (OrderEntity order : activeOrders) {
+            if (order.getLimitPrice() == null) continue;
+            int remaining = order.getQuantity() - (order.getFilledQuantity() != null ? order.getFilledQuantity() : 0);
+            if (remaining <= 0) continue;
+
+            if ("BUY".equals(order.getSide())) {
+                bidMap.merge(order.getLimitPrice(), remaining, Integer::sum);
+            } else if ("SELL".equals(order.getSide())) {
+                askMap.merge(order.getLimitPrice(), remaining, Integer::sum);
+            }
+        }
 
         List<OrderBookPoint> bids = new ArrayList<>();
-        bids.add(OrderBookPoint.getDummy(-1));
-        bids.add(OrderBookPoint.getDummy(-2));
-        bids.add(OrderBookPoint.getDummy(-3));
+        bidMap.forEach((price, qty) -> bids.add(new OrderBookPoint(price, qty)));
 
-        return new OrderBook(ticker, asks, bids);
+        List<OrderBookPoint> asks = new ArrayList<>();
+        askMap.forEach((price, qty) -> asks.add(new OrderBookPoint(price, qty)));
+
+        return new OrderBook(ticker, bids, asks);
     }
 
-    /**
-     * GET /market/options <br>
-     * TODO: Replace with actual data
-     * @return All active option contracts with current premiums as a list of {@link OptionContract}
-     */
     @GetMapping("/options")
     public List<OptionContract> getOptions() {
-        List<OptionContract> options = new ArrayList<>();
-        options.add(OptionContract.getDummy("option-abc-123"));
-        return options;
+        List<OptionContract> result = new ArrayList<>();
+        for (OptionContractEntity e : optionRepository.findByIsActiveTrue()) {
+            result.add(toOptionContract(e));
+        }
+        return result;
     }
 
-    /**
-     * GET /market/options/:option_id <br>
-     * TODO: Replace with actual data
-     * @return Full details for a specific option contract as {@link OptionContract}
-     */
     @GetMapping("/options/{option_id}")
-    public OptionContract getOptionById(@PathVariable("option_id") String option_id) {
-        return OptionContract.getDummy(option_id);
+    public OptionContract getOptionById(@PathVariable("option_id") String optionId) {
+        return optionRepository.findById(optionId)
+                .map(this::toOptionContract)
+                .orElseThrow(() -> new ExchangeException(ErrorCode.INVALID_TICKER, "Option not found: " + optionId));
     }
 
-    /**
-     * GET /market/events <br>
-     * TODO: Replace with actual data
-     * @return A list of recent and active market events
-     */
     @GetMapping("/events")
     public List<MarketEvent> getEvents() {
-        List<MarketEvent> events = new ArrayList<>();
-        events.add(MarketEvent.getDummy("event-abc-123"));
-        return events;
+        List<MarketEvent> result = new ArrayList<>();
+        for (MarketEventEntity e : eventRepository.findRecentEvents()) {
+            result.add(new MarketEvent(
+                    e.getEventId(),
+                    e.getEventType(),
+                    e.getScope(),
+                    e.getTarget(),
+                    e.getMagnitude() != null ? e.getMagnitude() : 0.0,
+                    e.getDurationTicks() != null ? e.getDurationTicks() : 0,
+                    e.getHeadline(),
+                    e.getTriggeredAt() != null ? e.getTriggeredAt() : 0L,
+                    e.getTriggeredBy()
+            ));
+        }
+        return result;
+    }
+
+    private Stock toStock(StockEntity e) {
+        return new Stock(
+                e.getTicker(),
+                e.getName(),
+                e.getSector(),
+                e.getCurrentPrice() != null ? e.getCurrentPrice() : 0.0,
+                e.getOpenPrice() != null ? e.getOpenPrice() : 0.0,
+                e.getHighPrice() != null ? e.getHighPrice() : 0.0,
+                e.getLowPrice() != null ? e.getLowPrice() : 0.0,
+                e.getVolume() != null ? e.getVolume() : 0,
+                e.getVolatility() != null ? e.getVolatility() : 0.0,
+                e.getTrendBias() != null ? e.getTrendBias() : 0.0,
+                e.getEventWeight() != null ? e.getEventWeight() : 0.0,
+                e.getMomentum() != null ? e.getMomentum() : 0.0,
+                e.getListedAt() != null ? e.getListedAt() : 0L
+        );
+    }
+
+    private OptionContract toOptionContract(OptionContractEntity e) {
+        return new OptionContract(
+                e.getOptionId(),
+                e.getUnderlyingTicker(),
+                e.getOptionType(),
+                e.getStrikePrice() != null ? e.getStrikePrice() : 0.0,
+                e.getExpiryTime() != null ? e.getExpiryTime() : 0L,
+                e.getPremium() != null ? e.getPremium() : 0.0,
+                e.getIsActive() != null && e.getIsActive(),
+                e.getAutoExercise() != null && e.getAutoExercise()
+        );
     }
 }
