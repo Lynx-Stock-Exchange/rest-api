@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -16,6 +17,9 @@ public class PlatformAuthFilter extends OncePerRequestFilter {
     public PlatformAuthFilter(PlatformService platformService) {
         this.platformService = platformService;
     }
+
+    @Value("${admin.secret-key}")
+    private String adminToken;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -30,13 +34,16 @@ public class PlatformAuthFilter extends OncePerRequestFilter {
 
         if (path.startsWith("/api/v1/admin")) {
             System.out.println("ADMIN FILTER EXECUTED");
-            String adminToken = request.getHeader("ADMIN-TOKEN");
+            String adminTokenRequest = request.getHeader("Authorization");
 
-            if (adminToken == null || !adminToken.equals("test-token")) {
+            if (!adminTokenRequest.equals(adminToken)) {
 
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.getWriter().write("Invalid admin token");
-
+                System.out.println("Invalid admin token: " + adminTokenRequest + " != " + adminToken);
+                return;
+            } else{
+                filterChain.doFilter(request, response);
                 return;
             }
         } else {

@@ -3,14 +3,48 @@ package lynx.team2.rest_api.controllers;
 import lynx.team2.rest_api.models.Order;
 import lynx.team2.rest_api.models.SpeedUpdateRequest;
 import lynx.team2.rest_api.models.StockSeedRequest;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/admin")
+@CrossOrigin("*") // remove this when deployed
 public class AdminController {
+
+    @Value("${kafka.topics.admin-commands}")
+    private String adminCommandsTopic;
+
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    public AdminController(KafkaTemplate<String, Object> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
+
+    private void publish(String action, Map<String, Object> payload) {
+        kafkaTemplate.send(adminCommandsTopic, new AdminCommand(action, payload));
+    }
+
+    private static class AdminCommand {
+        private final String action;
+        private final Map<String, Object> payload;
+
+        AdminCommand(String action, Map<String, Object> payload) {
+            this.action = action;
+            this.payload = payload;
+        }
+
+        public String getAction() { return action; }
+        public Map<String, Object> getPayload() { return payload; }
+    }
 
     /**
      * GET /admin/platforms <br>
@@ -18,10 +52,10 @@ public class AdminController {
      * @return A list of all registered platforms
      */
     @GetMapping("/platforms")
-    public List<String> getPlatforms(@RequestHeader("Authorization") String authHeader) {
-        List<String> platforms = new ArrayList<>();
-        platforms.add("ARKA");
-        return platforms;
+    public List<String> getPlatforms() {
+        //List<String> platforms = new ArrayList<>();
+        //platforms.add("ARKA");
+        return null;
     }
 
     /**
@@ -41,7 +75,7 @@ public class AdminController {
      * TODO: Replace with actual function
      */
     @DeleteMapping("/platforms")
-    public void deletePlatform(@RequestHeader("Authorization") String authHeader) {
+    public void deletePlatform() {
 
     }
 
@@ -51,8 +85,10 @@ public class AdminController {
      * TODO: Replace with actual function
      */
     @PostMapping("/market/open")
-    public void postOpen() {
-
+    public ResponseEntity<Void> postOpen() {
+        System.out.println("MARKET OPEN");
+        publish("OPEN_MARKET", Map.of());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
     /**
@@ -61,8 +97,10 @@ public class AdminController {
      * TODO: Replace with actual function
      */
     @PostMapping("/market/close")
-    public void postClose() {
-
+    public ResponseEntity<Void> postClose() {
+        System.out.println("MARKET CLOSE");
+        publish("CLOSE_MARKET", Map.of());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
     /**
@@ -71,10 +109,10 @@ public class AdminController {
      * TODO: Replace with actual function
      */
     @PutMapping("/market/speed")
-    public void putSpeed(
-            @RequestBody SpeedUpdateRequest request
-    ) {
-
+    public ResponseEntity<Void> putSpeed(@RequestBody SpeedUpdateRequest request){
+        System.out.println("MARKET SPEED UPDATE TO " + request.getMultiplier());
+        publish("MARKET_SPEED_UPDATE", Map.of("multiplier", request.getMultiplier()));
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
     /**

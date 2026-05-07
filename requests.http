@@ -1,0 +1,52 @@
+### Verify credentials → should return valid: true
+POST http://localhost:8085/api/v1/internal/platforms/verify
+Content-Type: application/json
+
+{"api_key": "my-key", "api_secret": "my-secret"}
+
+###
+
+### Market status → is_open: true
+GET http://localhost:8085/api/v1/market/status
+API-KEY: my-key
+API-SECRET: my-secret
+
+###
+
+### Stocks → should return ARKA
+GET http://localhost:8085/api/v1/market/stocks
+API-KEY: my-key
+API-SECRET: my-secret
+
+###
+
+### Place an order
+POST http://localhost:8085/api/v1/orders
+API-KEY: my-key
+API-SECRET: my-secret
+Content-Type: application/json
+
+{
+  "platform_user_id": "user-123",
+  "instrument_type": "STOCK",
+  "instrument_id": "ARKA",
+  "order_type": "LIMIT",
+  "side": "BUY",
+  "quantity": 10,
+  "limit_price": 129.00,
+  "expires_at": "2025-12-31T23:59:59"
+}
+
+###
+
+### Order book → should show the order above in bids
+GET http://localhost:8085/api/v1/market/stocks/ARKA/orderbook
+API-KEY: my-key
+API-SECRET: my-secret
+
+###
+
+### Invalid ticker → should return 404 with error code
+GET http://localhost:8085/api/v1/market/stocks/FAKE
+API-KEY: my-key
+API-SECRET: my-secret
