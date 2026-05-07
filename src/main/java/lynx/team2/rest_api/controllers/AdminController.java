@@ -1,5 +1,6 @@
 package lynx.team2.rest_api.controllers;
 
+import lynx.team2.rest_api.models.MarketEvent;
 import lynx.team2.rest_api.models.OptionContract;
 import lynx.team2.rest_api.models.SpeedUpdateRequest;
 import lynx.team2.rest_api.models.Stock;
@@ -217,6 +218,16 @@ public class AdminController {
     // -------------------------------------------------------------------------
     // EVENTS
     // -------------------------------------------------------------------------
+
+    /**
+     * GET /admin/events <br>
+     * List all market events (past and active) <br>
+     * TODO: Fetch event history from the simulation engine service
+     */
+    @GetMapping("/events")
+    public ResponseEntity<List<MarketEvent>> getEvents() {
+        return ResponseEntity.ok(List.of(MarketEvent.getDummy("EVT-001"), MarketEvent.getDummy("EVT-002")));
+    }
 
     /**
      * POST /admin/events/trigger <br>
