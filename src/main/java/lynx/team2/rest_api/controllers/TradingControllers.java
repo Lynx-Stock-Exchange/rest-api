@@ -73,13 +73,25 @@ public class TradingControllers {
             throw new ExchangeException(ErrorCode.INVALID_REQUEST, "side must be BUY or SELL.");
         }
 
+        // Validate platform_user_id
+        if (req.getPlatform_user_id() == null || req.getPlatform_user_id().isBlank()) {
+            throw new ExchangeException(ErrorCode.INVALID_REQUEST, "platform_user_id is required.");
+        }
+
         // Validate quantity
         if (req.getQuantity() == null || req.getQuantity() <= 0) {
             throw new ExchangeException(ErrorCode.INVALID_REQUEST, "quantity must be a positive integer.");
         }
 
         long now = Instant.now().getEpochSecond();
-        Long expiresAt = req.getExpires_at() != null ? LUtils.isoToEpochSecond(req.getExpires_at()) : null;
+        Long expiresAt = null;
+        if (req.getExpires_at() != null) {
+            try {
+                expiresAt = LUtils.isoToEpochSecond(req.getExpires_at());
+            } catch (Exception e) {
+                throw new ExchangeException(ErrorCode.INVALID_REQUEST, "expires_at must be ISO 8601 format, e.g. 2025-12-31T23:59:59");
+            }
+        }
 
         OrderEntity entity = new OrderEntity();
         entity.setOrderId(UUID.randomUUID().toString());

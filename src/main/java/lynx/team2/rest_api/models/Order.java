@@ -70,7 +70,7 @@ public class Order {
     public Double getExchange_fee() { return exchange_fee; }
     public String getCreated_at() { return LUtils.longToIsoDate(created_at); }
     public String getUpdated_at() { return LUtils.longToIsoDate(updated_at); }
-    public String getExpires_at() { return LUtils.longToIsoDate(expires_at); }
+    public String getExpires_at() { return expires_at != null && expires_at > 0 ? LUtils.longToIsoDate(expires_at) : null; }
 
     public static Order getDummy(String order_id) {
         return new Order(
