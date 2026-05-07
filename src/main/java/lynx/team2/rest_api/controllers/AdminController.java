@@ -3,13 +3,19 @@ package lynx.team2.rest_api.controllers;
 import lynx.team2.rest_api.models.Order;
 import lynx.team2.rest_api.models.SpeedUpdateRequest;
 import lynx.team2.rest_api.models.StockSeedRequest;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/admin")
+@CrossOrigin("*") // remove this when deployed
 public class AdminController {
 
     /**
@@ -18,10 +24,10 @@ public class AdminController {
      * @return A list of all registered platforms
      */
     @GetMapping("/platforms")
-    public List<String> getPlatforms(@RequestHeader("Authorization") String authHeader) {
-        List<String> platforms = new ArrayList<>();
-        platforms.add("ARKA");
-        return platforms;
+    public List<String> getPlatforms() {
+        //List<String> platforms = new ArrayList<>();
+        //platforms.add("ARKA");
+        return null;
     }
 
     /**
@@ -41,7 +47,7 @@ public class AdminController {
      * TODO: Replace with actual function
      */
     @DeleteMapping("/platforms")
-    public void deletePlatform(@RequestHeader("Authorization") String authHeader) {
+    public void deletePlatform() {
 
     }
 
@@ -51,8 +57,9 @@ public class AdminController {
      * TODO: Replace with actual function
      */
     @PostMapping("/market/open")
-    public void postOpen() {
-
+    public ResponseEntity<Void> postOpen() {
+        System.out.println("Market opened");
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
     /**
@@ -61,8 +68,9 @@ public class AdminController {
      * TODO: Replace with actual function
      */
     @PostMapping("/market/close")
-    public void postClose() {
-
+    public ResponseEntity<Void> postClose() {
+        System.out.println("Market closed");
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
     /**
@@ -71,10 +79,9 @@ public class AdminController {
      * TODO: Replace with actual function
      */
     @PutMapping("/market/speed")
-    public void putSpeed(
-            @RequestBody SpeedUpdateRequest request
-    ) {
-
+    public ResponseEntity<Void> putSpeed(@RequestBody SpeedUpdateRequest request){
+        System.out.println("Market speed updated to " + request.getMultiplier());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
     /**
