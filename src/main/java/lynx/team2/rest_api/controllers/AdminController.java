@@ -22,6 +22,7 @@ public class AdminController {
     private String adminCommandsTopic;
 
     private boolean marketOpen = false;
+    private int speedMultiplier = 1;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -89,7 +90,7 @@ public class AdminController {
         status.put("is_open", marketOpen);
         status.put("market_time", "2024-03-15T09:45:00");
         status.put("real_time", "2024-03-15T10:02:33Z");
-        status.put("speed_multiplier", 60);
+        status.put("speed_multiplier", speedMultiplier);
         status.put("active_event", null);
         return ResponseEntity.ok(status);
     }
@@ -127,8 +128,8 @@ public class AdminController {
      */
     @PutMapping("/market/speed")
     public ResponseEntity<Void> putSpeed(@RequestBody SpeedUpdateRequest request){
-        System.out.println("MARKET SPEED UPDATE TO " + request.getMultiplier());
-        publish("MARKET_SPEED_UPDATE", Map.of("multiplier", request.getMultiplier()));
+        speedMultiplier = request.getMultiplier();
+        publish("MARKET_SPEED_UPDATE", Map.of("multiplier", speedMultiplier));
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
