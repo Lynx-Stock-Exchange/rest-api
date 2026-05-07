@@ -31,7 +31,7 @@ public class AdminController {
      * @return The API key + secret
      */
     @PostMapping("/platforms")
-    public String postPlatform(@RequestHeader("Authorization") String authHeader) {
+    public String postPlatform() {
         return null;
     }
 
@@ -51,7 +51,7 @@ public class AdminController {
      * TODO: Replace with actual function
      */
     @PostMapping("/market/open")
-    public void postOpen(@RequestHeader("Authorization") String authHeader) {
+    public void postOpen() {
 
     }
 
@@ -61,7 +61,7 @@ public class AdminController {
      * TODO: Replace with actual function
      */
     @PostMapping("/market/close")
-    public void postClose(@RequestHeader("Authorization") String authHeader) {
+    public void postClose() {
 
     }
 
@@ -72,8 +72,7 @@ public class AdminController {
      */
     @PutMapping("/market/speed")
     public void putSpeed(
-            @RequestBody SpeedUpdateRequest request,
-            @RequestHeader("Authorization") String authHeader
+            @RequestBody SpeedUpdateRequest request
     ) {
 
     }
@@ -85,8 +84,7 @@ public class AdminController {
      */
     @PostMapping("/stocks")
     public void postSingleStock(
-            @RequestBody StockSeedRequest newStockData,
-            @RequestHeader("Authorization") String authHeader
+            @RequestBody StockSeedRequest newStockData
     ) {
 
     }
@@ -97,7 +95,7 @@ public class AdminController {
      * TODO: Replace with actual function
      */
     @PostMapping("/stocks/seed")
-    public void postStocks(@RequestHeader("Authorization") String authHeader) {
+    public void postStocks() {
 
     }
 
@@ -107,7 +105,7 @@ public class AdminController {
      * TODO: Replace with actual function
      */
     @PostMapping("/options")
-    public void postOption(@RequestHeader("Authorization") String authHeader) {
+    public void postOption() {
 
     }
 
@@ -117,7 +115,7 @@ public class AdminController {
      * TODO: Replace with actual function
      */
     @PostMapping("/events/trigger")
-    public void postEvent(@RequestHeader("Authorization") String authHeader) {
+    public void postEvent() {
 
     }
 
@@ -127,7 +125,7 @@ public class AdminController {
      * TODO: Replace with actual function
      */
     @PutMapping("/fees")
-    public void putFees(@RequestHeader("Authorization") String authHeader) {
+    public void putFees() {
 
     }
 }

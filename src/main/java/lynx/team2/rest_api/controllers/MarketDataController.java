@@ -1,5 +1,8 @@
 package lynx.team2.rest_api.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lynx.team2.rest_api.internal.Platform;
 import lynx.team2.rest_api.models.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +22,10 @@ public class MarketDataController {
      * @return The current state of the market as {@link MarketStatus}
      */
     @GetMapping("/status")
-    public MarketStatus getMarketStatus() {
+    public MarketStatus getMarketStatus(HttpServletRequest request) {
+        Platform platform = (Platform) request.getAttribute("platform");
+
+        System.out.println("Request from: " + platform.getName());
         return MarketStatus.getDummy();
     }
 
