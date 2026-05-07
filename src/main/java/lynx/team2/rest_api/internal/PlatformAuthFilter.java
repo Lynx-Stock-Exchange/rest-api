@@ -9,10 +9,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
 public class PlatformAuthFilter extends OncePerRequestFilter {
     private final PlatformService platformService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public PlatformAuthFilter(PlatformService platformService) {
         this.platformService = platformService;
@@ -20,6 +23,14 @@ public class PlatformAuthFilter extends OncePerRequestFilter {
 
     @Value("${admin.secret-key}")
     private String adminToken;
+
+    private void writeJsonError(HttpServletResponse response, int status, String code, String message) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.getWriter().write(objectMapper.writeValueAsString(
+                Map.of("error", Map.of("code", code, "message", message, "details", Map.of()))
+        ));
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -33,6 +44,7 @@ public class PlatformAuthFilter extends OncePerRequestFilter {
         System.out.println(path);
 
         if (path.startsWith("/api/v1/admin")) {
+<<<<<<< Updated upstream
             System.out.println("ADMIN FILTER EXECUTED");
             String adminTokenRequest = request.getHeader("Authorization");
 
@@ -44,26 +56,29 @@ public class PlatformAuthFilter extends OncePerRequestFilter {
                 return;
             } else{
                 filterChain.doFilter(request, response);
+=======
+            String adminTokenRequest = request.getHeader("X-Admin-Token");
+            if (adminTokenRequest == null || !adminTokenRequest.equals(adminToken)) {
+                writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "PLATFORM_NOT_AUTHORIZED", "Invalid or missing admin token.");
+>>>>>>> Stashed changes
                 return;
             }
-        } else {
-            System.out.println("BASE FILTER EXECUTED");
+            filterChain.doFilter(request, response);
+            return;
         }
 
         String apiKey = request.getHeader("API-KEY");
         String apiSecret = request.getHeader("API-SECRET");
 
         if (apiKey == null || apiSecret == null) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Missing API credentials");
+            writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "PLATFORM_NOT_AUTHORIZED", "Missing API-KEY or API-SECRET headers.");
             return;
         }
 
         Platform platform = platformService.verify(apiKey, apiSecret);
 
         if (platform == null) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Invalid API credentials");
+            writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "PLATFORM_NOT_AUTHORIZED", "Invalid API credentials.");
             return;
         }
 
