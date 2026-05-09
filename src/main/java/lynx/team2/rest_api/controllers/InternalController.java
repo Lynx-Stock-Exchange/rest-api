@@ -3,20 +3,25 @@ package lynx.team2.rest_api.controllers;
 import lynx.team2.rest_api.internal.Platform;
 import lynx.team2.rest_api.internal.PlatformService;
 import lynx.team2.rest_api.models.*;
+import lynx.team2.rest_api.repositories.PlatformRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/internal")
 public class InternalController {
 
     private final PlatformService platformService;
+    private final PlatformRepository platformRepository;
 
-    public InternalController(PlatformService platformService) {
+    public InternalController(PlatformService platformService, PlatformRepository platformRepository) {
         this.platformService = platformService;
+        this.platformRepository = platformRepository;
     }
 
     @PostMapping("/platforms/verify")
@@ -41,5 +46,13 @@ public class InternalController {
         }
 
         return ResponseEntity.ok(new PlatformVerificationResponse(true, platform.getId(), platform.getName()));
+    }
+
+    @GetMapping("/platforms/active")
+    public ResponseEntity<Map<String, Object>> getActivePlatforms() {
+        List<Map<String, Object>> platforms = platformRepository.findAll().stream()
+                .map(p -> Map.of("id", (Object) p.getId(), "is_active", true))
+                .toList();
+        return ResponseEntity.ok(Map.of("platforms", platforms));
     }
 }

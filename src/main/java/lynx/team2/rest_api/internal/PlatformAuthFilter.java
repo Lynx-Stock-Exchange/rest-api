@@ -36,7 +36,7 @@ public class PlatformAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // Skip verification endpoint itself (important!)
         String path = request.getRequestURI();
-        if (path.startsWith("/api/v1/internal/platforms/verify")) {
+        if (path.startsWith("/api/v1/internal/")) {
             filterChain.doFilter(request, response);
             return;
         }

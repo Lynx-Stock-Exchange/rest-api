@@ -343,6 +343,7 @@ public class AdminController {
                     if (req.getStrike_price() != null) e.setStrikePrice(req.getStrike_price());
                     if (req.getExpiry_time() != null) e.setExpiryTime(LUtils.isoToEpochSecond(req.getExpiry_time()));
                     if (req.getPremium() != null) e.setPremium(req.getPremium());
+                    if (req.getIs_active() != null) e.setIsActive(req.getIs_active());
                     OptionContractEntity saved = optionRepository.save(e);
                     publish("OPTION_UPDATED", Map.of("option_id", optionId));
                     return ResponseEntity.ok(toOptionModel(saved));

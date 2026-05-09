@@ -50,3 +50,16 @@ API-SECRET: my-secret
 GET http://localhost:8085/api/v1/market/stocks/FAKE
 API-KEY: my-key
 API-SECRET: my-secret
+
+###
+
+### Update an option contract (all fields optional)
+PUT http://localhost:8085/api/v1/admin/options/{optionId}
+Content-Type: application/json
+
+{
+  "strike_price": 150.00,
+  "expiry_time": "2025-12-31T23:59:59",
+  "premium": 5.50,
+  "is_active": false
+}
