@@ -33,4 +33,8 @@ public interface OrderRepository extends JpaRepository<OrderEntity, String> {
            "AND o.orderType = 'LIMIT' " +
            "AND o.status IN ('PENDING', 'PARTIALLY_FILLED')")
     List<OrderEntity> findActiveOrdersForOrderBook(@Param("instrumentId") String instrumentId);
+
+    @Query("SELECT o FROM OrderEntity o WHERE o.platformId = :platformId " +
+           "AND o.status IN ('PENDING', 'PARTIALLY_FILLED')")
+    List<OrderEntity> findActiveByPlatformId(@Param("platformId") String platformId);
 }

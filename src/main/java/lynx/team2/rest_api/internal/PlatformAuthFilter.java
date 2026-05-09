@@ -43,13 +43,15 @@ public class PlatformAuthFilter extends OncePerRequestFilter {
 
         System.out.println(path);
 
-        if (path.startsWith("/api/v1/admin")) {
-            String adminTokenRequest = request.getHeader("X-Admin-Token");
-            if (adminTokenRequest == null || !adminTokenRequest.equals(adminToken)) {
-                writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "PLATFORM_NOT_AUTHORIZED", "Invalid or missing admin token.");
-                return;
-            }
+        String adminTokenRequest = request.getHeader("X-Admin-Token");
+        if (adminTokenRequest == null) adminTokenRequest = request.getHeader("Authorization");
+        if (adminTokenRequest != null && adminTokenRequest.equals(adminToken)) {
             filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (path.startsWith("/api/v1/admin")) {
+            writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "PLATFORM_NOT_AUTHORIZED", "Invalid or missing admin token.");
             return;
         }
 
