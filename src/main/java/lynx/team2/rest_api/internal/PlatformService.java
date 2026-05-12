@@ -1,7 +1,11 @@
 package lynx.team2.rest_api.internal;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -12,6 +16,7 @@ import java.util.Map;
 public class PlatformService {
 
     private final RestTemplate restTemplate = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${admin.service.url}")
     private String adminServiceUrl;
@@ -21,10 +26,14 @@ public class PlatformService {
             String url = adminServiceUrl + "/internal/platforms/verify";
             Map<String, String> body = Map.of("api_key", apiKey, "api_secret", apiSecret);
 
-            ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
+
+            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                JsonNode json = response.getBody();
+                JsonNode json = objectMapper.readTree(response.getBody());
                 boolean valid = json.path("valid").asBoolean(false);
                 if (!valid) return null;
 
@@ -34,7 +43,8 @@ public class PlatformService {
 
                 return new Platform(platformId, platformName);
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            System.err.println("[PlatformService] verify failed: " + e.getClass().getName() + ": " + e.getMessage());
         }
         return null;
     }
