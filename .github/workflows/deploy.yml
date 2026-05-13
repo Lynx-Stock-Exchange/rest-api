@@ -1,0 +1,44 @@
+name: Deploy REST API
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: rest-api-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy rest-api
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+
+            cd ~/stock-exchange/rest-api
+
+            echo "Pulling latest rest-api..."
+            git fetch origin
+            git checkout main
+            git pull origin main
+
+            cd ~/stock-exchange
+
+            echo "Building only rest-api..."
+            DOCKER_BUILDKIT=1 docker compose build rest-api
+
+            echo "Restarting only rest-api without dependencies..."
+            docker compose up -d --no-deps rest-api
+
+            echo "Deployment status:"
+            docker compose ps rest-api
