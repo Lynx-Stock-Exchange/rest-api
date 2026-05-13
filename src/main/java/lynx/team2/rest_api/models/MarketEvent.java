@@ -13,6 +13,8 @@ public class MarketEvent {
     private long triggered_at;      // Simulated market timestamp of event start
     private String triggered_by;    // "SYSTEM" (automatic) or "ADMIN" (manual)
 
+    public MarketEvent() {}
+
     public MarketEvent(String event_id, String event_type, String scope, String target, double magnitude, int duration_ticks, String headline, long triggered_at, String triggered_by) {
         this.event_id = event_id;
         this.event_type = event_type;
@@ -33,7 +35,18 @@ public class MarketEvent {
     public int getDuration_ticks() { return duration_ticks; }
     public String getHeadline() { return headline; }
     public String getTriggered_at() { return LUtils.longToIsoDate(triggered_at); }
+    public long getTriggered_at_long() { return triggered_at; }
     public String getTriggered_by() { return triggered_by; }
+
+    public void setEvent_id(String event_id) { this.event_id = event_id; }
+    public void setEvent_type(String event_type) { this.event_type = event_type; }
+    public void setScope(String scope) { this.scope = scope; }
+    public void setTarget(String target) { this.target = target; }
+    public void setMagnitude(double magnitude) { this.magnitude = magnitude; }
+    public void setDuration_ticks(int duration_ticks) { this.duration_ticks = duration_ticks; }
+    public void setHeadline(String headline) { this.headline = headline; }
+    public void setTriggered_at(long triggered_at) { this.triggered_at = triggered_at; }
+    public void setTriggered_by(String triggered_by) { this.triggered_by = triggered_by; }
 
     public static MarketEvent getDummy(String event_id) {
         return new MarketEvent(

@@ -3,25 +3,27 @@ package lynx.team2.rest_api.controllers;
 import lynx.team2.rest_api.internal.Platform;
 import lynx.team2.rest_api.internal.PlatformService;
 import lynx.team2.rest_api.models.*;
-import lynx.team2.rest_api.repositories.PlatformRepository;
+import lynx.team2.rest_api.state.StateStore;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/internal")
 public class InternalController {
 
     private final PlatformService platformService;
-    private final PlatformRepository platformRepository;
+    private final StateStore stateStore;
 
-    public InternalController(PlatformService platformService, PlatformRepository platformRepository) {
+    public InternalController(PlatformService platformService, StateStore stateStore) {
         this.platformService = platformService;
-        this.platformRepository = platformRepository;
+        this.stateStore = stateStore;
     }
 
     @PostMapping("/platforms/verify")
@@ -50,9 +52,17 @@ public class InternalController {
 
     @GetMapping("/platforms/active")
     public ResponseEntity<Map<String, Object>> getActivePlatforms() {
-        List<Map<String, Object>> platforms = platformRepository.findAll().stream()
-                .map(p -> Map.of("id", (Object) p.getId(), "is_active", true))
-                .toList();
-        return ResponseEntity.ok(Map.of("platforms", platforms));
+        List<Map<String, Object>> platformList = stateStore.getAllPlatforms().stream()
+                .map(p -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", p.getId());
+                    map.put("is_active", true);
+                    return map;
+                })
+                .collect(Collectors.toList());
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("platforms", platformList);
+        return ResponseEntity.ok(response);
     }
 }

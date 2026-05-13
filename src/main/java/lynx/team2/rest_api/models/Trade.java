@@ -15,6 +15,8 @@ public class Trade {
     private double exchange_fee;         // Exchange fee for this execution (see Section 7)
     private long executed_at;           // Simulated market timestamp
 
+    public Trade() {}
+
     public Trade(String trade_id, String order_id, String platform_id, String platform_user_id, String instrument_type, String instrument_id, String side, int quantity, double price, double exchange_fee, long executed_at) {
         this.trade_id = trade_id;
         this.order_id = order_id;
@@ -40,6 +42,19 @@ public class Trade {
     public double getPrice() { return price; }
     public double getExchange_fee() { return exchange_fee; }
     public String getExecuted_at() { return LUtils.longToIsoDate(executed_at); }
+    public long getExecuted_at_long() { return executed_at; }
+
+    public void setTrade_id(String trade_id) { this.trade_id = trade_id; }
+    public void setOrder_id(String order_id) { this.order_id = order_id; }
+    public void setPlatform_id(String platform_id) { this.platform_id = platform_id; }
+    public void setPlatform_user_id(String platform_user_id) { this.platform_user_id = platform_user_id; }
+    public void setInstrument_type(String instrument_type) { this.instrument_type = instrument_type; }
+    public void setInstrument_id(String instrument_id) { this.instrument_id = instrument_id; }
+    public void setSide(String side) { this.side = side; }
+    public void setQuantity(int quantity) { this.quantity = quantity; }
+    public void setPrice(double price) { this.price = price; }
+    public void setExchange_fee(double exchange_fee) { this.exchange_fee = exchange_fee; }
+    public void setExecuted_at(long executed_at) { this.executed_at = executed_at; }
 
     public static Trade getDummy(String trade_id) {
         return new Trade(

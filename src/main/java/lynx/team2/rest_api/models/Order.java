@@ -20,6 +20,8 @@ public class Order {
     private Long updated_at;            // Simulated market timestamp of last status change
     private Long expires_at;            // For LIMIT orders: simulated market time after which order is cancelled
 
+    public Order() {}
+
     public Order(String order_id,
                  String platform_id,
                  String platform_user_id,
@@ -68,9 +70,26 @@ public class Order {
     public Integer  getFilled_quantity() { return filled_quantity; }
     public Double getAverage_fill_price() { return average_fill_price; }
     public Double getExchange_fee() { return exchange_fee; }
-    public String getCreated_at() { return LUtils.longToIsoDate(created_at); }
-    public String getUpdated_at() { return LUtils.longToIsoDate(updated_at); }
+    public String getCreated_at() { return LUtils.longToIsoDate(created_at != null ? created_at : 0L); }
+    public String getUpdated_at() { return LUtils.longToIsoDate(updated_at != null ? updated_at : 0L); }
     public String getExpires_at() { return expires_at != null && expires_at > 0 ? LUtils.longToIsoDate(expires_at) : null; }
+
+    public void setOrder_id(String order_id) { this.order_id = order_id; }
+    public void setPlatform_id(String platform_id) { this.platform_id = platform_id; }
+    public void setPlatform_user_id(String platform_user_id) { this.platform_user_id = platform_user_id; }
+    public void setInstrument_type(String instrument_type) { this.instrument_type = instrument_type; }
+    public void setInstrument_id(String instrument_id) { this.instrument_id = instrument_id; }
+    public void setOrder_type(String order_type) { this.order_type = order_type; }
+    public void setSide(String side) { this.side = side; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+    public void setLimit_price(Double limit_price) { this.limit_price = limit_price; }
+    public void setStatus(String status) { this.status = status; }
+    public void setFilled_quantity(Integer filled_quantity) { this.filled_quantity = filled_quantity; }
+    public void setAverage_fill_price(Double average_fill_price) { this.average_fill_price = average_fill_price; }
+    public void setExchange_fee(Double exchange_fee) { this.exchange_fee = exchange_fee; }
+    public void setCreated_at(Long created_at) { this.created_at = created_at; }
+    public void setUpdated_at(Long updated_at) { this.updated_at = updated_at; }
+    public void setExpires_at(Long expires_at) { this.expires_at = expires_at; }
 
     public static Order getDummy(String order_id) {
         return new Order(
