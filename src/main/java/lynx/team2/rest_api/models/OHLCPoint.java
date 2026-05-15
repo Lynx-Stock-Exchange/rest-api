@@ -31,15 +31,4 @@ public class OHLCPoint {
     public double getLow_price() { return low_price; }
     public int getVolume() { return volume; }
     public String getTimestamp() { return LUtils.longToIsoDate(timestamp); }
-
-    public static OHLCPoint getDummy(int offset) {
-        return new OHLCPoint(
-                12.34 + offset,
-                23.45 + offset,
-                34.56 + offset,
-                45.67 + offset,
-                123,
-                1776941245L + (offset*10L)
-        );
-    }
 }

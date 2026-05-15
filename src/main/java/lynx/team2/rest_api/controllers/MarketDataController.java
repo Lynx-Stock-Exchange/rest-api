@@ -1,20 +1,35 @@
 package lynx.team2.rest_api.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lynx.team2.rest_api.internal.Platform;
 import lynx.team2.rest_api.models.*;
+import lynx.team2.rest_api.services.MarketDataService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/market")
 public class MarketDataController {
+
+    private final MarketDataService marketDataService;
+    private final String marketEventsUrl;
+
+    public MarketDataController(
+            MarketDataService marketDataService,
+            @Value("${market-events.url:http://market-events:8082}") String marketEventsUrl) {
+        this.marketDataService = marketDataService;
+        this.marketEventsUrl = marketEventsUrl;
+    }
 
     /**
      * GET /market/status <br>
@@ -26,29 +41,30 @@ public class MarketDataController {
         Platform platform = (Platform) request.getAttribute("platform");
 
         System.out.println("Request from: " + platform.getName());
-        return MarketStatus.getDummy();
+        // TODO: Fetch from live market state service
+        return new MarketStatus(true, System.currentTimeMillis() / 1000, System.currentTimeMillis() / 1000, 60, null);
     }
 
     /**
      * GET /market/stocks <br>
-     * TODO: Replace with actual data
      * @return A list of {@link Stock}, all listed stocks with current prices and simulation metadata
      */
     @GetMapping("/stocks")
     public List<Stock> getStocks() {
-        List<Stock> stocks = new ArrayList<>();
-        stocks.add(Stock.getDummy("ARKA"));
-        return stocks;
+        return marketDataService.getAllStocks();
     }
 
     /**
      * GET /market/stocks:ticker <br>
-     * TODO: Replace with actual data
      * @return The full details for a single stock as {@link Stock}, including OHLC data for the current simulated day.
      */
     @GetMapping("/stocks/{ticker}")
     public Stock getStockByTicker(@PathVariable("ticker") String ticker) {
-        return Stock.getDummy(ticker);
+        Stock stock = marketDataService.getStock(ticker);
+        if (stock == null) {
+            throw new RuntimeException("Stock not found: " + ticker);
+        }
+        return stock;
     }
 
     /**
@@ -62,11 +78,8 @@ public class MarketDataController {
      */
     @GetMapping("/stocks/{ticker}/history")
     public List<OHLCPoint> getStockHistoryByTicker(@PathVariable("ticker") String ticker) {
-        List<OHLCPoint> points = new ArrayList<>();
-        points.add(OHLCPoint.getDummy(0));
-        points.add(OHLCPoint.getDummy(1));
-        points.add(OHLCPoint.getDummy(2));
-        return points;
+        // TODO: Fetch from historical data service
+        return new ArrayList<>();
     }
 
     /**
@@ -76,29 +89,17 @@ public class MarketDataController {
      */
     @GetMapping("/stocks/{ticker}/orderbook")
     public OrderBook getStockOrderbookByTicker(@PathVariable("ticker") String ticker) {
-        List<OrderBookPoint> asks = new ArrayList<>();
-        asks.add(OrderBookPoint.getDummy(0));
-        asks.add(OrderBookPoint.getDummy(1));
-        asks.add(OrderBookPoint.getDummy(2));
-
-        List<OrderBookPoint> bids = new ArrayList<>();
-        bids.add(OrderBookPoint.getDummy(-1));
-        bids.add(OrderBookPoint.getDummy(-2));
-        bids.add(OrderBookPoint.getDummy(-3));
-
-        return new OrderBook(ticker, asks, bids);
+        // TODO: Fetch from order book engine
+        return new OrderBook(ticker, new ArrayList<>(), new ArrayList<>());
     }
 
     /**
      * GET /market/options <br>
-     * TODO: Replace with actual data
-     * @return All active option contracts with current premiums as a list of {@link OptionContract}
+     * @return All active option contracts with current premiums
      */
     @GetMapping("/options")
-    public List<OptionContract> getOptions() {
-        List<OptionContract> options = new ArrayList<>();
-        options.add(OptionContract.getDummy("option-abc-123"));
-        return options;
+    public List<Map<String, Object>> getOptions() {
+        return marketDataService.getAllOptions();
     }
 
     /**
@@ -108,18 +109,27 @@ public class MarketDataController {
      */
     @GetMapping("/options/{option_id}")
     public OptionContract getOptionById(@PathVariable("option_id") String option_id) {
-        return OptionContract.getDummy(option_id);
+        // TODO: Fetch from options service
+        throw new RuntimeException("Option not found: " + option_id);
     }
 
     /**
-     * GET /market/events <br>
-     * TODO: Replace with actual data
-     * @return A list of recent and active market events
+     * GET /market/events
+     * @return Recent and active market events proxied from the market-events service DB.
      */
     @GetMapping("/events")
-    public List<MarketEvent> getEvents() {
-        List<MarketEvent> events = new ArrayList<>();
-        events.add(MarketEvent.getDummy("event-abc-123"));
-        return events;
+    public List<Map<String, Object>> getEvents() {
+        try {
+            List<Map<String, Object>> result = RestClient.builder().baseUrl(marketEventsUrl).build()
+                    .get()
+                    .uri("/api/v1/market/events")
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<>() {});
+            return result != null ? result : new ArrayList<>();
+        } catch (Exception e) {
+            System.out.println("Warning: could not fetch events from market-events: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 }

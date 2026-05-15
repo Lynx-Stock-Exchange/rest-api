@@ -22,14 +22,4 @@ public class MarketStatus {
     public String getReal_time() { return LUtils.longToIsoDate(real_time); }
     public int getSpeed_multiplier() { return speed_multiplier; }
     public String getActive_event() { return active_event; }
-
-    public static MarketStatus getDummy() {
-        return new MarketStatus(
-                true,
-                1710511200L,
-                1710511200L,
-                60,
-                null
-        );
-    }
 }

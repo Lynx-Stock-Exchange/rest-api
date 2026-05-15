@@ -12,11 +12,4 @@ public class OrderBookPoint {
     public double getPrice() { return price; }
 
     public int getQuantity() { return quantity; }
-
-    public static OrderBookPoint getDummy(int offset) {
-        return new OrderBookPoint(
-                12.34 + offset,
-                5 + offset
-        );
-    }
 }

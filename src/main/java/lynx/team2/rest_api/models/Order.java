@@ -71,25 +71,4 @@ public class Order {
     public String getCreated_at() { return LUtils.longToIsoDate(created_at); }
     public String getUpdated_at() { return LUtils.longToIsoDate(updated_at); }
     public String getExpires_at() { return LUtils.longToIsoDate(expires_at); }
-
-    public static Order getDummy(String order_id) {
-        return new Order(
-                order_id,
-                "platform-abc-123",
-                "user-abc-123",
-                "STOCK",
-                "ARKA",
-                "LIMIT",
-                "BUY",
-                50,
-                128.0,
-                "FILLED",
-                50,
-                12.34,
-                1.23,
-                1710511200L,
-                1710511200L,
-                1710511200L
-        );
-    }
 }

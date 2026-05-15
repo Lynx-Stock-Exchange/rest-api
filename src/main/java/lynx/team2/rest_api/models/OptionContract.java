@@ -31,17 +31,4 @@ public class OptionContract {
     public double getPremium() { return premium; }
     public boolean isIs_active() { return is_active; }
     public boolean isAuto_exercise() { return auto_exercise; }
-
-    public static OptionContract getDummy(String option_id) {
-        return new OptionContract(
-                option_id,
-                "ARKA",
-                "CALL",
-                12.34,
-                1710511200L,
-                1,
-                true,
-                true
-        );
-    }
 }

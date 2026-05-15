@@ -34,18 +34,4 @@ public class MarketEvent {
     public String getHeadline() { return headline; }
     public String getTriggered_at() { return LUtils.longToIsoDate(triggered_at); }
     public String getTriggered_by() { return triggered_by; }
-
-    public static MarketEvent getDummy(String event_id) {
-        return new MarketEvent(
-                event_id,
-                "SECTOR_SLUMP",
-                "SECTOR",
-                "Tech",
-                1.8,
-                20,
-                "Awesome Headline",
-                1710511200L,
-                "SYSTEM"
-        );
-    }
 }

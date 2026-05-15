@@ -40,20 +40,4 @@ public class Trade {
     public double getPrice() { return price; }
     public double getExchange_fee() { return exchange_fee; }
     public String getExecuted_at() { return LUtils.longToIsoDate(executed_at); }
-
-    public static Trade getDummy(String trade_id) {
-        return new Trade(
-                trade_id,
-                "order-abc-123",
-                "platform-abc-123",
-                "user-abc-123",
-                "STOCK",
-                "ARKA",
-                "BUY",
-                50,
-                12.34,
-                1.23,
-                1776941245L
-        );
-    }
 }
